@@ -57,6 +57,8 @@ phylum_list = table(D$Phylum)
 phylum_frame = data.frame(Taxon=names(phylum_list), N=phylum_list)
 kable( phylum_frame )
 ```
+
+
 ```{r}
 ggplot(D) + 
 	geom_freqpoly(aes(x=`Collecting Year`, y=..count..)) +
