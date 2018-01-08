@@ -1,0 +1,75 @@
+---
+output:
+  github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	echo=FALSE,
+	dpi=300
+	)
+```
+
+# Peabody Invertebrate Zoology Collections Statistics
+
+This document describes a variety of statistics about the [Peabody Invertebrate Zoology Collections](http://peabody.yale.edu/collections/invertebrate-zoology).
+
+The data were obtained from Daniel Drew on January 8, 2018.
+
+```{r}
+library( tidyverse )
+library( magrittr )
+library( knitr )
+
+
+D = read_tsv( "IZReport_20180108.tsv" )
+
+nrow(D)
+names(D)
+
+
+
+
+
+```
+
+```{r asis=TRUE }
+
+summary_stats = data.frame(Description=character(), N=numeric())
+summary_stats %<>% rbind(list( "All Records", nrow(D) ), stringsAsFactors=FALSE )
+summary_stats %<>% rbind(list( "Lat and Lon", sum( 
+	!is.na(D$`Latitude (dec)`) & !is.na(D$`Longitude (dec)`), 
+	stringsAsFactors=FALSE
+	) ) )
+
+names(summary_stats) = c("Description", "N")
+
+kable(summary_stats)
+
+```
+
+
+```{r asis=TRUE}
+phylum_list = table(D$Phylum)
+phylum_frame = data.frame(Taxon=names(phylum_list), N=phylum_list)
+kable( phylum_frame )
+```
+```{r}
+ggplot(D) + 
+	geom_freqpoly(aes(x=`Collecting Year`, y=..count..)) +
+	xlim(1800, 2017)
+```
+```{r}
+
+collectors = c(table(D$`Collector/Expedition`))
+collectors = collectors[order(collectors, decreasing = TRUE)]
+
+collectors_frame = data.frame(Name=names(collectors), N=collectors, stringsAsFactors = FALSE)
+rownames(collectors_frame) = NULL
+kable( collectors_frame[1:50,] )
+```
+
+
