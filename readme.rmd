@@ -71,7 +71,25 @@ collectors = collectors[order(collectors, decreasing = TRUE)]
 
 collectors_frame = data.frame(Name=names(collectors), N=collectors, stringsAsFactors = FALSE)
 rownames(collectors_frame) = NULL
-kable( collectors_frame[1:50,] )
+kable( collectors_frame[1:100,] )
+```
+
+
+## Locations
+
+```{r}
+
+D_ll = D[ (!is.na(D$`Latitude (dec)`) & !is.na(D$`Longitude (dec)`) ), ]
+
+
+mp <- NULL
+mapWorld <- borders("world", colour="gray50", fill="gray50") # create a layer of borders
+mp <- ggplot( D_ll ) +   mapWorld
+#Now Layer the cities on top
+mp <- mp + geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)` ), alpha = 0.2, size=1) 
+mp
+
+
 ```
 
 
