@@ -202,3 +202,20 @@ The data were obtained from Daniel Drew on January 8,
 ## Locations
 
 ![](readme_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+## Arianna queries
+
+### Most prolific collectors
+
+Most collections are from the US Fish Commission cruises, so I’ll
+separate these out.
+
+![](readme_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+Here are the non US Fish Commission cruises collectors.
+
+![](readme_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+## Sub regions
+
+![](readme_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->

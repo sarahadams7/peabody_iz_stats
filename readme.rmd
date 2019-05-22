@@ -23,6 +23,7 @@ The data were obtained from Daniel Drew on January 8, 2018.
 library( tidyverse )
 library( magrittr )
 library( knitr )
+library( plotly )
 
 
 D = read_tsv( "IZReport_20180108.tsv" )
@@ -87,10 +88,13 @@ mapWorld <- borders("world", colour="gray50", fill="gray50") # create a layer of
 mp = 
 	ggplot( D_ll ) +   
 	mapWorld + 
-	geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collecting Year` ), alpha = 0.2, size=1) +
+	geom_point(
+		aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collecting Year`, label1=`Catalog Number` ), alpha = 0.2, size=1
+		) +
 	scale_color_gradient(low="blue", high="red")
 
 mp
+# ggplotly(mp)
 
 
 ```
@@ -142,6 +146,21 @@ map_not_fish
 ## Sub regions
 
 ```{r}
+
+
+mapPacific <- borders("world", colour="gray50", fill="gray50") # create a layer of borders
+
+mp = 
+	ggplot( D_ll ) +   
+	mapPacific + 
+	geom_point(
+		aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collecting Year`, label1=`Catalog Number` ), alpha = 0.2, size=1
+		) +
+	scale_color_gradient(low="blue", high="red")
+
+mp
+# ggplotly(mp)
+
 
 ```
 
