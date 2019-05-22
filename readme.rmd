@@ -193,4 +193,17 @@ mp
 
 
 
+## U.S. Exploring Expedition 1838-1842
+
+The U.S exploring Expeditions were of historical importance! What specimens in the Peabody IZ Division Collections are from this and where in Pacific are they from?
+
+It turns out that most of these specimens do not have lat and long or precise locality, perhaps to gain this data cross reference with orignial ship logs? Or use the Nearest named place as the locality? 
+
+- Next objective create a map using the nearest named place as the locality
+
+```{r}
+D %>% filter(`Collector/Expedition`=="U.S. Exploring Expedition 1838-1842")
+
+```
+
 
