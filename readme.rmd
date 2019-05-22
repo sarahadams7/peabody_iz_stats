@@ -143,6 +143,33 @@ map_not_fish
 
 ```
 
+## Lazo-Wasem_string
+
+Eric has been a very prolific collector, however his name as a collector varies within the collection due to differnet collection events/other co-collectors 
+
+Below I have seperated these out.
+
+```{r}
+
+LazoWasem_string = "^Lazo-Wasem"
+ 
+collectors_focal = 
+    collectors_frame %>%
+    filter( str_detect(Name, LazoWasem_string) )
+
+D_ll %>%
+  filter( `Collector/Expedition` %in% collectors_focal$Name[1:18] ) %>%
+  ggplot( ) +  
+  mapWorld +
+  geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collector/Expedition` ), alpha = 0.2, size=1) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+  
+
+```
+
+
+
+
 ## Sub regions
 
 ```{r}
