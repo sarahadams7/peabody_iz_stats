@@ -82,14 +82,69 @@ kable( collectors_frame[1:100,] )
 D_ll = D[ (!is.na(D$`Latitude (dec)`) & !is.na(D$`Longitude (dec)`) ), ]
 
 
-mp <- NULL
 mapWorld <- borders("world", colour="gray50", fill="gray50") # create a layer of borders
-mp <- ggplot( D_ll ) +   mapWorld
-#Now Layer the cities on top
-mp <- mp + geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)` ), alpha = 0.2, size=1) 
+
+mp = 
+	ggplot( D_ll ) +   
+	mapWorld + 
+	geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collecting Year` ), alpha = 0.2, size=1) +
+	scale_color_gradient(low="blue", high="red")
+
 mp
 
 
 ```
+
+## Arianna queries
+
+### Most prolific collectors
+
+Most collections are from the US Fish Commission cruises, so I'll separate these out.
+
+```{r}
+
+fish_string = "^U.S. Fish Comm"
+
+collectors_focal = 
+	collectors_frame %>%
+	filter( str_detect(Name, fish_string) )
+
+D_ll %>%
+	filter( `Collector/Expedition` %in% collectors_focal$Name[1:10] ) %>%
+	ggplot( ) +  
+		mapWorld +
+		geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collector/Expedition` ), alpha = 0.2, size=1) +
+	  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+
+```
+
+Here are the non US Fish Commission cruises collectors.
+
+
+```{r}
+
+collectors_focal = 
+	collectors_frame %>%
+	filter( ! str_detect(Name, fish_string) )
+
+map_not_fish =
+D_ll %>%
+	filter( `Collector/Expedition` %in% collectors_focal$Name[1:10] ) %>%
+	ggplot( ) +  
+		mapWorld +
+		geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collector/Expedition` ), alpha = 0.2, size=1) +
+	  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+
+map_not_fish
+
+```
+
+## Sub regions
+
+```{r}
+
+```
+
+
 
 
