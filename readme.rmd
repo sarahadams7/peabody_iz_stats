@@ -209,3 +209,66 @@ D %>% filter(`Collector/Expedition`=="U.S. Exploring Expedition 1838-1842")
 ```
 
 
+##U.S Exploring Expedition, Best locations 
+
+finding the best location by filtering for the Expedition name and then selecting the columns in the table that are of interest (Country or nearest locality).  
+
+Not every specimen has both of these variables, so will combine columns to get of both in one column.
+
+
+
+
+```{r}
+
+U.S._ExEx <- D %>% filter(`Collector/Expedition`=="U.S. Exploring Expedition 1838-1842")
+US_ExEx_Best_Location <- US_ExEx %>% select('Catalog Number', Country, 'City/Town/Nearest Named Place', 'Latitude (dec)', 'Longitude (dec)')
+US_ExEx_Best_Location
+
+US_ExEx_Best_Location$Locality <- paste(US_ExEx_Best_Location$`City/Town/Nearest Named Place`, US_ExEx_Best_Location$Country)
+
+USExEX_Locality <- US_ExEx_Best_Location %>% select('Catalog Number', Locality, 'Latitude (dec)', 'Longitude (dec)')
+USExEX_Locality
+
+```
+
+##Specimens by locality
+
+```{r}
+
+Locality = c(table(USExEX_Locality$Locality))
+Locality = Locality[order(Locality, decreasing = TRUE)]
+
+Locality_frame = data.frame(Name=names(Locality), N=Locality, stringsAsFactors = FALSE)
+rownames(Locality_frame) = NULL
+kable(Locality_frame[1:29,] )
+
+```
+
+## Specimens without locality
+
+There are 78 specimens without locality infomation
+
+```{r}
+
+USExEX_Locality %>% filter(Locality=="NA NA")
+
+```
+
+
+## Specimens by ocean 
+
+goal: to overlay polygons onto map, coloured by density of specimens from each body of water 
+
+```{r}
+
+ocean = c(table(D$`Ocean`))
+ocean = ocean[order(ocean, decreasing = TRUE)]
+
+ocean_frame = data.frame(Name=names(ocean), N=ocean, stringsAsFactors = FALSE)
+rownames(ocean_frame) = NULL
+kable(ocean_frame[1:43,] )
+
+
+
+```
+
