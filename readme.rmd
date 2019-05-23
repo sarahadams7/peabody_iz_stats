@@ -136,7 +136,8 @@ D_ll %>%
 	filter( `Collector/Expedition` %in% collectors_focal$Name[1:10] ) %>%
 	ggplot( ) +  
 		mapWorld +
-		geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collector/Expedition` ), alpha = 0.2, size=1) +
+		geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, colour=str_wrap (`Collector/Expedition`,20) ), alpha = 0.2, size=1) +
+  labs(colour="Collecter/Expedition") +
 	  guides(colour = guide_legend(override.aes = list(alpha = 1)))
 
 map_not_fish
@@ -161,7 +162,8 @@ D_ll %>%
   filter( `Collector/Expedition` %in% collectors_focal$Name[1:18] ) %>%
   ggplot( ) +  
   mapWorld +
-  geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collector/Expedition` ), alpha = 0.2, size=1) +
+  geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, colour=str_wrap (`Collector/Expedition`,40) ), alpha = 0.2, size=1) +
+  labs(colour="Collecter/Expedition") +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
   
 
