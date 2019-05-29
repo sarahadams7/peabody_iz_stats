@@ -272,3 +272,108 @@ kable(ocean_frame[1:43,] )
 
 ```
 
+
+# Using geospatial tools to create polygone overlaps of specific regions 
+
+```{r}
+#for geospatial tools
+library(rgdal)
+library(maptools)
+library(rgeos)
+
+#for some data reduction
+library(dplyr)
+
+ogrInfo("/Users/ariannalord/repo/peabody_iz_stats/MEOW", "meow_ecos")
+
+regions <- readOGR("/Users/ariannalord/repo/peabody_iz_stats/MEOW", "meow_ecos")
+
+plot(regions)
+
+provinces <- unionSpatialPolygons(regions, regions$PROVINCE)
+
+#Make a data frame that will have Province level info and above
+prov_data <- regions@data %>%
+group_by(PROVINCE) %>%
+summarise(PROV_CODE = PROV_CODE[1], REALM = REALM[1], RLM_CODE=RLM_CODE[1], Lat_Zone=Lat_Zone[1])
+
+#Merge polygons with new data file
+data = data.frame(merge(data.frame(PROVINCE=names(provinces)), prov_data), row.names=row.names(provinces))
+provinces <- SpatialPolygonsDataFrame(provinces, data)
+
+#######
+#make realms shapefile
+########
+#make spatial polygons for realms
+realms <- unionSpatialPolygons(regions, regions$REALM)
+
+#make new data
+realm_data <- regions@data %>%
+  group_by(REALM) %>%
+  summarise(RLM_CODE = RLM_CODE[1],  Lat_Zone=Lat_Zone[1])
+
+#merge the two!
+realms <- SpatialPolygonsDataFrame(realms, 
+                                   data=data.frame(
+                                     merge(data.frame(REALM=names(realms)),
+                                          realm_data),
+                                     row.names=row.names(realms)))
+
+##Plot them all
+par(mfrow=c(2,2), mar=c(0,0,0,0))
+plot(regions, main="Ecoregion", cex.main=5)
+plot(provinces, lwd=2, border="red", main="Province")
+plot(realms, lwd=2, border="blue", main="Realm")
+par(mfrow=c(1,1))
+
+#preparing to plot with color 
+regions@data$id = rownames(regions@data)
+provinces@data$id = rownames(provinces@data)
+
+#fortify function, this converts a R fucntion into a data frame for ggplot
+library(ggplot2)
+regions.points = fortify(regions, ECOREGION="id")
+provinces.points = fortify(provinces, PROVINCES="id")
+
+#fortified data frames describe the points we want to plot, next we must join the points with the map_data
+regions.df = merge(regions.points, regions@data, by="id")
+provinces.df = merge(provinces.points, provinces@data, by="id") 
+
+#####Make some ggplots for later visualization
+base_ecoregion_ggplot <- ggplot(regions.df) + theme_bw() +
+  aes(long,lat,group=group) + 
+  geom_polygon(fill=NA) +
+  geom_path(color="black") +
+  coord_equal() 
+
+
+base_province_ggplot <- ggplot(provinces.df) + theme_bw() +
+  aes(long,lat,group=group) + 
+  geom_polygon(fill=NA) +
+  geom_path(color="black") +
+  coord_equal() 
+
+base_ecoregion_ggplot + ggtitle("Ecoregions")
+base_province_ggplot + ggtitle("Provinces")
+
+```
+
+
+# Now back to the data 
+I want to manipulate the specimen data to place the latitude and longitude points into their ecoregions, and then create a choropleth plot dependent on the density of specimens (E.g. as done in the maps in this paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3338747/ )
+
+To do this I will create a new table only with the relevant columns and rows.  I will exclude the data that does not have latlong data points and filter by columns of interest (e.g. catalog number, phylum, collector, year)
+
+```{r}
+meowrd = D %>% select("Catalog Number", Phylum, "Collector/Expedition", "Collecting Year", "Latitude (dec)", "Longitude (dec)")
+
+meowrd_frame <- na.omit(meowrd)
+
+meowrd_frame
+
+```
+
+
+Now I want to add in the ecoregion data, here is code template i will use for this https://github.com/jebyrnes/meowR ..... so far have not figured out how to to do this: "using a sp function over, getRegions to provide a wrapper to add MEOW information to the dataset."
+
+
