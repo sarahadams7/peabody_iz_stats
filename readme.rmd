@@ -94,7 +94,7 @@ mp =
 	scale_color_gradient(low="blue", high="red")
 
 mp
-# ggplotly(mp)
+#ggplotly(mp)
 
 
 ```
@@ -273,7 +273,18 @@ kable(ocean_frame[1:43,] )
 ```
 
 
-# Using geospatial tools to create polygone overlaps of specific regions 
+#Moving on from specimens by ocean
+
+## Using geospatial tools to create polygone overlaps of specific regions 
+
+What is an ecoregion? 
+Bioregionalization of coastal and shelf areas for mapping marine biodiversity 
+
+Original publication 
+- https://www.researchgate.net/publication/263705480_Marine_Ecoregions_of_the_World_A_Bioregionalization_of_Coastal_and_Shelf_Areas
+
+Spatial polygon data for plotting
+- https://www.worldwildlife.org/publications/marine-ecoregions-of-the-world-a-bioregionalization-of-coastal-and-shelf-areas
 
 ```{r}
 #for geospatial tools
@@ -373,7 +384,82 @@ meowrd_frame
 
 ```
 
+#Ecoregions
 
-Now I want to add in the ecoregion data, here is code template i will use for this https://github.com/jebyrnes/meowR ..... so far have not figured out how to to do this: "using a sp function over, getRegions to provide a wrapper to add MEOW information to the dataset."
+Now I want to add in the ecoregion data:
+
+comining collections data lat/long and ecoregions data to determine ecoregions of peabody IZ specimens 
+
+```{r}
+latlong <- data.frame(Catalog = c(meowrd_frame$"Catalog Number"), lat = c(meowrd_frame$"Latitude (dec)"),                long=c(meowrd_frame$"Longitude (dec)")) 
+
+regionalData <- getRegions(latlong$lat, latlong$long)  
+newdata <- cbind(latlong, regionalData)
+newdata
+
+```
+
+now, what ecoregions have the most specimens? / great sampling density ?
+
+```{r}
+
+ecoregions_list = c(table(newdata$ECOREGION))
+ecoregions_list = ecoregions_list[order(ecoregions_list, decreasing = TRUE)]
+ecoregions_frame = data.frame(ECOREGION=names(ecoregions_list), N=ecoregions_list, stringsAsFactors = FALSE)
+rownames(ecoregions_frame) = NULL
+kable( ecoregions_frame[1:120,] )
+
+```
+understanding of distribution 
+
+```{r}
+
+# Simple Bar Plot 
+counts <- table(ecoregions_frame$N)
+barplot(counts, main="N", 
+   xlab="Number of specimens per location")
+
+```
 
 
+
+
+now we make the map expressing this density 
+
+ first is the base province ggplot, next input the values to correspond to colour 
+ 
+ !!!the the hover function aes needs to be fixed here!!
+ 
+ 
+
+```{r}
+
+#libraries
+library(viridis)
+library(plotly)
+library(tidyverse)
+
+
+#breaking up the color to best suite my data distribution 
+my_breaks = c(1, 10, 100, 1000, 10000, 20000)
+
+plot.data <- merge(regions.df, ecoregions_frame, by = "ECOREGION")
+
+#plotting color by density of specimens from those locations
+p <- ggplot(plot.data, aes(x = long, y = lat, group = group, fill = N)) +
+    geom_polygon(
+        aes(Ecoregion = 'ECOREGION', "Number of specimens" = 'N'), color = "white", size = 0.2,) +
+    coord_equal() +
+    scale_fill_viridis(name = "count", trans = "log",
+                      breaks = my_breaks, labels = my_breaks) +
+    labs(title = "Number of specimens from Marine Ecoregions of the World",
+         fill = NULL) +
+    theme_dark() +
+    theme(legend.position = "right",
+          panel.background = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(color = "black", size=4))
+
+
+ggplotly(p)
+
+```
