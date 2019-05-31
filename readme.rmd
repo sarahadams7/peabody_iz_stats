@@ -388,7 +388,7 @@ meowrd_frame
 
 Now I want to add in the ecoregion data:
 
-comining collections data lat/long and ecoregions data to determine ecoregions of peabody IZ specimens 
+combining collections data lat/long and ecoregions data to determine ecoregions of peabody IZ specimens 
 
 ```{r}
 latlong <- data.frame(Catalog = c(meowrd_frame$"Catalog Number"), lat = c(meowrd_frame$"Latitude (dec)"),                long=c(meowrd_frame$"Longitude (dec)")) 

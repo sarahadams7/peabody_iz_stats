@@ -1,0 +1,124 @@
+---
+title: "Long Island Sound"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	echo=FALSE,
+	dpi=300
+	)
+```
+
+#Change over time in Long Island
+
+Since the collections of Addison Verrill in the late 1800's and early 1900's, over 100 years have passed.  In 2017 Dr Leanne Elder and Eric Lazo-Wasem lead a collecting project of Long Island Sound Invertebrates.  The specimens they collected are available in the collection databse.  This provides an oppourtunity to compare the two data sets from the same localities 100 years apart.  
+
+The internship posting for the collection project is below and provides some background to the project. 
+http://peabody.yale.edu/yale-students/footsteps-addison-verrill-2107-internship
+
+
+
+#IZ Long Island sound datadump, 
+Verrills work in long island sound, late 1800's to early 1900's and the recent 2017 long island sound collecting trip data  
+
+All data is from:
+(http://peabody.yale.edu/collections/invertebrate-zoology).
+
+
+#Verrill Data
+
+Below we create the set of data belonging to Verrill, I am calling this dataset "V".
+
+
+```{r}
+library( tidyverse )
+library( magrittr )
+library( knitr )
+library( plotly )
+
+V = read_csv( "longislandverrill.csv" )
+
+nrow(V)
+names(V)
+
+```
+
+
+#Ginsburg Data
+
+Next we have the ginsburg data set, collected in 2017, I am calling this dataset "G".
+
+```{r}
+
+G = read_csv( "Ginsburgdata.csv" )
+
+nrow(G)
+names(G)
+
+```
+
+
+#So...let the analysis and comparisons commence!
+
+#lat and long data for verrill
+
+```{r}
+
+Vsummary_stats = data.frame(Description=character(), N=numeric())
+Vsummary_stats %<>% rbind(list( "All Records", nrow(V) ), stringsAsFactors=FALSE )
+Vsummary_stats %<>% rbind(list( "Lat and Lon", sum( 
+	!is.na(V$`latitude`) & !is.na(V$`longitude`), 
+	stringsAsFactors=FALSE
+	) ) )
+
+names(Vsummary_stats) = c("Description", "N")
+
+kable(Vsummary_stats)
+
+```
+
+```{r}
+
+Gsummary_stats = data.frame(Description=character(), N=numeric())
+Gsummary_stats %<>% rbind(list( "All Records", nrow(G) ), stringsAsFactors=FALSE )
+Gsummary_stats %<>% rbind(list( "Lat and Lon", sum( 
+	!is.na(G$`latitude`) & !is.na(G$`longitude`), 
+	stringsAsFactors=FALSE
+	) ) )
+
+names(Gsummary_stats) = c("Description", "N")
+
+kable(Gsummary_stats)
+
+```
+
+#Species Present in Verrill data
+
+```{r}
+
+Vspecies_list = table(V$scientificname)
+Vspecies_frame = data.frame(Taxon=names(Vspecies_list), N=Vspecies_list)
+kable( Vspecies_frame )
+
+```
+
+
+#Species present in Ginsburg Data
+
+```{r}
+
+Gspecies_list = table(G$scientificname)
+Gspecies_frame = data.frame(Taxon=names(Gspecies_list), N=Gspecies_list)
+kable( Gspecies_frame )
+
+```
+
+
+#What taxon are present in both of these data groups? What are missing?
+
+
+
