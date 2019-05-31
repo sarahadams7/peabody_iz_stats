@@ -113,12 +113,115 @@ kable( Vspecies_frame )
 
 Gspecies_list = table(G$scientificname)
 Gspecies_frame = data.frame(Taxon=names(Gspecies_list), N=Gspecies_list)
+
 kable( Gspecies_frame )
 
 ```
 
 
 #What taxon are present in both of these data groups? What are missing?
+
+```{r}
+
+intersect(Gspecies_frame$"Taxon", Vspecies_frame$"Taxon" )
+
+```
+
+this is not many??
+
+Will need pull the genus from the species and compare across genus, also phyla ?
+
+for 
+
+
+```{r}
+
+Vspecies_list <- (Vspecies_frame$"Taxon")
+Vgenus <- word(Vspecies_list, 1)
+Vgenus_frame = data.frame(Taxon=Vgenus, N=Vspecies_frame$"N.Freq")
+
+kable(Vgenus_frame)
+
+```
+
+And now for the G
+
+```{r}
+Gspecies_list <- (Gspecies_frame$"Taxon")
+Ggenus <- word(Gspecies_list, 1)
+Ggenus_frame = data.frame(Taxon=Ggenus, N=Gspecies_frame$"N.Freq")
+
+kable(Ggenus_frame)
+```
+
+#Genus that cross over
+There are only 60 Genus present in both Verrill and Ginsburg data sets
+
+```{r}
+
+intersect(Ggenus_frame$"Taxon", Vgenus_frame$"Taxon" )
+
+genus_intersection_frame = data.frame(intersect(Ggenus_frame$"Taxon", Vgenus_frame$"Taxon"))
+
+```
+
+#Genus distint to each data set
+
+```{r}
+
+#return observations in Ginsburg, but not in Verrill.
+setdiff(Ggenus_frame$"Taxon", Vgenus_frame$"Taxon") 
+
+G_only_frame = data.frame(setdiff(Ggenus_frame$"Taxon", Vgenus_frame$"Taxon"))
+
+
+```
+
+```{r}
+
+##return observations in Verrill, but not in Ginsburg
+setdiff(Vgenus_frame$"Taxon", Ggenus_frame$"Taxon") 
+
+V_only_frame = data.frame(setdiff(Vgenus_frame$"Taxon", Ggenus_frame$"Taxon"))
+```
+
+
+#Where?!
+
+did verrill collect?
+
+```{r}
+V_ll = V[ (!is.na(V$"latitude") & !is.na(V$"longitude") ), ]
+
+
+# Open libraries
+library(tidyverse)
+library(maps)
+library(mapdata)
+library(ggplot2)
+library(magick)
+
+# Load map
+w <- map_data("world")
+
+# Set longitude and latitude limits
+longitude = c(-180,180)
+latitude = c(-180, 180)
+#Create object of land
+land = geom_polygon(data = w, aes(x=long, y = lat, group = group))
+# Set map limits
+map_limits = coord_cartesian(xlim = c(-71.5, -74.5), ylim = c(40.5, 41.5))
+
+  # Create ggplot items for all the data  
+  locations = geom_point(data = V_ll, aes(x=`longitude`, y=`latitude`), color="red", alpha = 1, size=1)
+  
+  # Create a plot
+  plot <- ggplot(V_ll) + locations + land + map_limits
+  
+  plot
+  
+
+```
 
 
 

@@ -450,7 +450,7 @@ p <- ggplot(plot.data, aes(x = long, y = lat, group = group, fill = N)) +
     geom_polygon(
         aes(Ecoregion = 'ECOREGION', "Number of specimens" = 'N'), color = "white", size = 0.2,) +
     coord_equal() +
-    scale_fill_viridis(name = "count", trans = "log",
+    scale_fill_viridis(name = "Count", trans = "log",
                       breaks = my_breaks, labels = my_breaks) +
     labs(title = "Number of specimens from Marine Ecoregions of the World",
          fill = NULL) +
