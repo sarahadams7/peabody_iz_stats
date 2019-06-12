@@ -1,0 +1,494 @@
+---
+output:
+  github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	echo=FALSE,
+	dpi=300
+	)
+```
+
+# Peabody Invertebrate Zoology Collections Statistics
+
+This document describes a variety of statistics about the [Peabody Invertebrate Zoology Collections](http://peabody.yale.edu/collections/invertebrate-zoology).
+
+The data were obtained from Daniel Drew on January 8, 2018.
+
+```{r}
+library( tidyverse )
+library( magrittr )
+library( knitr )
+library( plotly )
+
+
+D = read_tsv( "IZReport_20180108.tsv" )
+
+nrow(D)
+names(D)
+
+
+
+
+
+```
+
+```{r asis=TRUE }
+
+summary_stats = data.frame(Description=character(), N=numeric())
+summary_stats %<>% rbind(list( "All Records", nrow(D) ), stringsAsFactors=FALSE )
+summary_stats %<>% rbind(list( "Lat and Lon", sum( 
+	!is.na(D$`Latitude (dec)`) & !is.na(D$`Longitude (dec)`), 
+	stringsAsFactors=FALSE
+	) ) )
+
+names(summary_stats) = c("Description", "N")
+
+kable(summary_stats)
+
+```
+
+
+```{r asis=TRUE}
+phylum_list = table(D$Phylum)
+phylum_frame = data.frame(Taxon=names(phylum_list), N=phylum_list)
+kable( phylum_frame )
+```
+
+
+```{r}
+ggplot(D) + 
+	geom_freqpoly(aes(x=`Collecting Year`, y=..count..)) +
+	xlim(1800, 2017)
+```
+```{r}
+
+collectors = c(table(D$`Collector/Expedition`))
+collectors = collectors[order(collectors, decreasing = TRUE)]
+
+collectors_frame = data.frame(Name=names(collectors), N=collectors, stringsAsFactors = FALSE)
+rownames(collectors_frame) = NULL
+kable( collectors_frame[1:100,] )
+```
+
+
+## Locations
+
+```{r}
+
+D_ll = D[ (!is.na(D$`Latitude (dec)`) & !is.na(D$`Longitude (dec)`) ), ]
+
+
+mapWorld <- borders("world", colour="gray50", fill="gray50") # create a layer of borders
+
+mp = 
+	ggplot( D_ll ) +   
+	mapWorld + 
+	geom_point(
+		aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collecting Year`, label1=`Catalog Number` ), alpha = 0.2, size=1
+		) +
+	scale_color_gradient(low="blue", high="red")
+
+mp
+#ggplotly(mp)
+
+
+```
+
+## Arianna queries
+
+### Most prolific collectors
+
+Most collections are from the US Fish Commission cruises, so I'll separate these out.
+
+```{r}
+
+fish_string = "^U.S. Fish Comm"
+
+collectors_focal = 
+	collectors_frame %>%
+	filter( str_detect(Name, fish_string) )
+
+D_ll %>%
+	filter( `Collector/Expedition` %in% collectors_focal$Name[1:10] ) %>%
+	ggplot( ) +  
+		mapWorld +
+		geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collector/Expedition` ), alpha = 0.2, size=1) +
+	  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+
+```
+
+Here are the non US Fish Commission cruises collectors.
+
+
+```{r}
+
+collectors_focal = 
+	collectors_frame %>%
+	filter( ! str_detect(Name, fish_string) )
+
+map_not_fish =
+D_ll %>%
+	filter( `Collector/Expedition` %in% collectors_focal$Name[1:10] ) %>%
+	ggplot( ) +  
+		mapWorld +
+		geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, colour=str_wrap (`Collector/Expedition`,20) ), alpha = 0.2, size=1) +
+  labs(colour="Collecter/Expedition") +
+	  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+
+map_not_fish
+
+```
+
+## Lazo-Wasem_string
+
+Eric has been a very prolific collector, however his name as a collector varies within the collection due to differnet collection events/other co-collectors 
+
+Below I have seperated these out.
+
+```{r}
+
+LazoWasem_string = "^Lazo-Wasem"
+ 
+collectors_focal = 
+    collectors_frame %>%
+    filter( str_detect(Name, LazoWasem_string) )
+
+D_ll %>%
+  filter( `Collector/Expedition` %in% collectors_focal$Name[1:18] ) %>%
+  ggplot( ) +  
+  mapWorld +
+  geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`, colour=str_wrap (`Collector/Expedition`,40) ), alpha = 0.2, size=1) +
+  labs(colour="Collecter/Expedition") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+  
+
+```
+
+
+
+
+## Sub regions
+
+```{r}
+
+
+mapPacific <- borders("world", colour="gray50", fill="gray50") # create a layer of borders
+
+mp = 
+	ggplot( D_ll ) +   
+	mapPacific + 
+	geom_point(
+		aes(x=`Longitude (dec)`, y=`Latitude (dec)`, col=`Collecting Year`, label1=`Catalog Number` ), alpha = 0.2, size=1
+		) +
+	scale_color_gradient(low="blue", high="red")
+
+mp
+# ggplotly(mp)
+
+
+```
+
+
+
+## U.S. Exploring Expedition 1838-1842
+
+The U.S exploring Expeditions were of historical importance! What specimens in the Peabody IZ Division Collections are from this and where in Pacific are they from?
+
+It turns out that most of these specimens do not have lat and long or precise locality, perhaps to gain this data cross reference with orignial ship logs? Or use the Nearest named place as the locality? 
+
+- Next objective create a map using the nearest named place as the locality
+
+```{r}
+D %>% filter(`Collector/Expedition`=="U.S. Exploring Expedition 1838-1842")
+
+```
+
+
+##U.S Exploring Expedition, Best locations 
+
+finding the best location by filtering for the Expedition name and then selecting the columns in the table that are of interest (Country or nearest locality).  
+
+Not every specimen has both of these variables, so will combine columns to get of both in one column.
+
+
+
+
+```{r}
+
+U.S._ExEx <- D %>% filter(`Collector/Expedition`=="U.S. Exploring Expedition 1838-1842")
+US_ExEx_Best_Location <- U.S._ExEx %>% select('Catalog Number', Country, 'City/Town/Nearest Named Place', 'Latitude (dec)', 'Longitude (dec)')
+US_ExEx_Best_Location
+
+US_ExEx_Best_Location$Locality <- paste(US_ExEx_Best_Location$`City/Town/Nearest Named Place`, US_ExEx_Best_Location$Country)
+
+USExEX_Locality <- US_ExEx_Best_Location %>% select('Catalog Number', Locality, 'Latitude (dec)', 'Longitude (dec)')
+USExEX_Locality
+
+```
+
+##Specimens by locality
+
+```{r}
+
+Locality = c(table(USExEX_Locality$Locality))
+Locality = Locality[order(Locality, decreasing = TRUE)]
+
+Locality_frame = data.frame(Name=names(Locality), N=Locality, stringsAsFactors = FALSE)
+rownames(Locality_frame) = NULL
+kable(Locality_frame[1:29,] )
+
+```
+
+## Specimens without locality
+
+There are 78 specimens without locality infomation
+
+```{r}
+
+USExEX_Locality %>% filter(Locality=="NA NA")
+
+```
+
+
+## Specimens by ocean 
+
+goal: to overlay polygons onto map, coloured by density of specimens from each body of water 
+
+```{r}
+
+ocean = c(table(D$`Ocean`))
+ocean = ocean[order(ocean, decreasing = TRUE)]
+
+ocean_frame = data.frame(Name=names(ocean), N=ocean, stringsAsFactors = FALSE)
+rownames(ocean_frame) = NULL
+kable(ocean_frame[1:43,] )
+
+
+
+```
+
+
+#Moving on from specimens by ocean
+
+## Using geospatial tools to create polygone overlaps of specific regions 
+
+What is an ecoregion? 
+Bioregionalization of coastal and shelf areas for mapping marine biodiversity 
+
+Original publication 
+- https://www.researchgate.net/publication/263705480_Marine_Ecoregions_of_the_World_A_Bioregionalization_of_Coastal_and_Shelf_Areas
+
+Spatial polygon data for plotting
+- https://www.worldwildlife.org/publications/marine-ecoregions-of-the-world-a-bioregionalization-of-coastal-and-shelf-areas
+
+```{r}
+#for geospatial tools
+library(rgdal)
+library(maptools)
+library(rgeos)
+
+#for some data reduction
+library(dplyr)
+
+ogrInfo("/Users/ariannalord/repo/peabody_iz_stats/MEOW", "meow_ecos")
+
+regions <- readOGR("/Users/ariannalord/repo/peabody_iz_stats/MEOW", "meow_ecos")
+
+plot(regions)
+
+provinces <- unionSpatialPolygons(regions, regions$PROVINCE)
+
+#Make a data frame that will have Province level info and above
+prov_data <- regions@data %>%
+group_by(PROVINCE) %>%
+summarise(PROV_CODE = PROV_CODE[1], REALM = REALM[1], RLM_CODE=RLM_CODE[1], Lat_Zone=Lat_Zone[1])
+
+#Merge polygons with new data file
+data = data.frame(merge(data.frame(PROVINCE=names(provinces)), prov_data), row.names=row.names(provinces))
+provinces <- SpatialPolygonsDataFrame(provinces, data)
+
+#######
+#make realms shapefile
+########
+#make spatial polygons for realms
+realms <- unionSpatialPolygons(regions, regions$REALM)
+
+#make new data
+realm_data <- regions@data %>%
+  group_by(REALM) %>%
+  summarise(RLM_CODE = RLM_CODE[1],  Lat_Zone=Lat_Zone[1])
+
+#merge the two!
+realms <- SpatialPolygonsDataFrame(realms, 
+                                   data=data.frame(
+                                     merge(data.frame(REALM=names(realms)),
+                                          realm_data),
+                                     row.names=row.names(realms)))
+
+##Plot them all
+par(mfrow=c(2,2), mar=c(0,0,0,0))
+plot(regions, main="Ecoregion", cex.main=5)
+plot(provinces, lwd=2, border="red", main="Province")
+plot(realms, lwd=2, border="blue", main="Realm")
+par(mfrow=c(1,1))
+
+#preparing to plot with color 
+regions@data$id = rownames(regions@data)
+provinces@data$id = rownames(provinces@data)
+
+#fortify function, this converts a R fucntion into a data frame for ggplot
+library(ggplot2)
+regions.points = fortify(regions, ECOREGION="id")
+provinces.points = fortify(provinces, PROVINCES="id")
+
+#fortified data frames describe the points we want to plot, next we must join the points with the map_data
+regions.df = merge(regions.points, regions@data, by="id")
+provinces.df = merge(provinces.points, provinces@data, by="id") 
+
+#####Make some ggplots for later visualization
+base_ecoregion_ggplot <- ggplot(regions.df) + theme_bw() +
+  aes(long,lat,group=group) + 
+  geom_polygon(fill=NA) +
+  geom_path(color="black") +
+  coord_equal() 
+
+
+base_province_ggplot <- ggplot(provinces.df) + theme_bw() +
+  aes(long,lat,group=group) + 
+  geom_polygon(fill=NA) +
+  geom_path(color="black") +
+  coord_equal() 
+
+base_ecoregion_ggplot + ggtitle("Ecoregions")
+base_province_ggplot + ggtitle("Provinces")
+
+```
+
+
+# Now back to the data 
+I want to manipulate the specimen data to place the latitude and longitude points into their ecoregions, and then create a choropleth plot dependent on the density of specimens (E.g. as done in the maps in this paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3338747/ )
+
+To do this I will create a new table only with the relevant columns and rows.  I will exclude the data that does not have latlong data points and filter by columns of interest (e.g. catalog number, phylum, collector, year)
+
+```{r}
+meowrd = D %>% select("Catalog Number", Phylum, "Collector/Expedition", "Collecting Year", "Latitude (dec)", "Longitude (dec)")
+
+meowrd_frame <- na.omit(meowrd)
+
+meowrd_frame
+
+```
+
+#Ecoregions
+
+Now I want to add in the ecoregion data:
+
+combining collections data lat/long and ecoregions data to determine ecoregions of peabody IZ specimens 
+
+```{r}
+latlong <- data.frame(Catalog = c(meowrd_frame$"Catalog Number"), lat = c(meowrd_frame$"Latitude (dec)"),                long=c(meowrd_frame$"Longitude (dec)")) 
+
+regionalData <- getRegions(latlong$lat, latlong$long)  
+newdata <- cbind(latlong, regionalData)
+newdata
+
+```
+
+now, what ecoregions have the most specimens? / great sampling density ?
+
+```{r}
+
+ecoregions_list = c(table(newdata$ECOREGION))
+ecoregions_list = ecoregions_list[order(ecoregions_list, decreasing = TRUE)]
+ecoregions_frame = data.frame(ECOREGION=names(ecoregions_list), N=ecoregions_list, stringsAsFactors = FALSE)
+rownames(ecoregions_frame) = NULL
+kable( ecoregions_frame[1:120,] )
+
+```
+understanding of distribution 
+
+```{r}
+
+# Simple Bar Plot 
+counts <- table(ecoregions_frame$N)
+barplot(counts, main="N", 
+   xlab="Number of specimens per location")
+
+```
+
+
+
+
+now we make the map expressing this density 
+
+ first is the base province ggplot, next input the values to correspond to colour 
+ 
+ !!!the the hover function aes needs to be fixed here!!
+ 
+ 
+
+```{r}
+
+#libraries
+library(viridis)
+library(plotly)
+library(tidyverse)
+
+
+#breaking up the color to best suite my data distribution 
+my_breaks = c(1, 10, 100, 1000, 10000, 20000)
+
+plot.data <- merge(regions.df, ecoregions_frame, by = "ECOREGION")
+
+#plotting color by density of specimens from those locations
+p <- ggplot(plot.data, aes(x = long, y = lat, group = group, fill = N)) +
+    geom_polygon(
+        aes(Ecoregion = 'ECOREGION', "Number of specimens" = 'N'), color = "white", size = 0.2,) +
+    coord_equal() +
+    scale_fill_viridis(name = "Count", trans = "log",
+                      breaks = my_breaks, labels = my_breaks) +
+    labs(title = "Number of specimens from Marine Ecoregions of the World",
+         fill = NULL) +
+    theme_dark() +
+    theme(legend.position = "right",
+          panel.background = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(color = "black", size=4))
+
+
+ggplotly(p)
+
+```
+
+
+#Sarah queries
+#Seychelles expedition
+
+Multiple files for Seychelles expedition of 1957-58, going to combine them below.
+
+```{r}
+seychelles_string = "Seychelles"
+
+collectors_focal = 
+	collectors_frame %>%
+	filter( str_detect(Name, seychelles_string) )
+
+collectors_focal
+
+sm = D_ll %>% filter(`Collector/Expedition` %in% collectors_focal$Name[1:10]) %>%
+  ggplot() +  
+		mapWorld +
+		geom_point(aes(x=`Longitude (dec)`, y=`Latitude (dec)`), alpha = 0.2, size=1) 
+
+sm
+	
+seycheles_Locality <- seychelles_Best_Location %>% select('Catalog Number', Locality, 'Latitude (dec)', 'Longitude (dec)')
+seychelles_Locality
+
+
+```
+
